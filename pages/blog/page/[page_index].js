@@ -1,23 +1,29 @@
 import fs from "fs"
 import path from "path"
-import matter from 'gray-matter';
-import Link from "next/link"
-import Layout from "../../../components/Layout";
-import Post from "../../../components/Post"
-import Pagination from "../../../components/Pagination";
-import { sortByDate } from "../../../utils"
-import { POSTS_PER_PAGE } from "../../../config/index"
+import Layout from "@/components/Layout";
+import Post from "@/components/Post"
+import Pagination from "@/components/Pagination";
+import CategoryList from "@/components/CategoryList";
+import { getPosts } from "@/lib/post"
+import { POSTS_PER_PAGE } from "@/config/index"
 
-export default function BlogPage({ posts, numPages, currentPage }) {
+export default function BlogPage({ posts, numPages, currentPage, categories }) {
     return (
         <Layout>
-            <h1 className="text-5xl border-b-4 p-5 font-bold">Latest Posts</h1>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {posts.map((post, i) => (
-                    <Post key={i} post={post} />
-                ))}
+            <div className="flex justify-between">
+                <div className="w-3/4 mr-10">
+                    <h1 className="text-5xl border-b-4 p-5 font-bold">Latest Posts</h1>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {posts.map((post, i) => (
+                            <Post key={i} post={post} />
+                        ))}
+                    </div>
+                    <Pagination currentPage={currentPage} numPages={numPages} />
+                </div>
+                <div className="w-1/4">
+                    <CategoryList categories={categories} />
+                </div>
             </div>
-            <Pagination currentPage={currentPage} numPages={numPages} />
         </Layout>
     )
 }
@@ -46,25 +52,19 @@ export async function getStaticProps({ params }) {
 
     const files = fs.readdirSync(path.join("posts"))
 
-    const posts = files.map(filename => {
-        const slug = filename.replace(".md", "")
-        const markdownWithMeta = fs.readFileSync(path.join("posts", filename), "utf-8")
-        const { data: frontMatter } = matter(markdownWithMeta)
+    const posts = getPosts()
 
-        return {
-            slug,
-            frontMatter
-        }
-    })
+    const categories = [...new Set(posts.map(post => post.frontMatter.category))]
 
     const numPages = Math.ceil(files.length / POSTS_PER_PAGE)
     const pageIndex = page - 1
-    const orderedPosts = posts.sort(sortByDate).slice(pageIndex * POSTS_PER_PAGE, (pageIndex + 1) * POSTS_PER_PAGE)
+    const orderedPosts = posts.slice(pageIndex * POSTS_PER_PAGE, (pageIndex + 1) * POSTS_PER_PAGE)
     return {
         props: {
             posts: orderedPosts,
             numPages,
-            currentPage: page
+            currentPage: page,
+            categories
         }
     }
 }
