@@ -6,7 +6,7 @@ export default function handler(req, res) {
   const search = req.query.q.toLowerCase()
 
   let posts
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV === "production") {
     posts = require("../../cache/data").posts
   } else {
     const files = fs.readdirSync(path.join("cache", "posts"))
