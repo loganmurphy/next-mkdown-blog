@@ -7,9 +7,9 @@ export default function handler(req, res) {
 
   let posts
   if (process.env.NODE_ENV === "production") {
-    // TODO: add cache
+    posts = require("../../cache/data")
   } else {
-    const files = fs.readdirSync(path.join("posts"))
+    const files = fs.readdirSync(path.join("cache", "posts"))
     posts = files.map(filename => {
       const markdownWithMeta = fs.readFileSync(path.join("posts", filename), "utf-8")
       const { data: frontMatter } = matter(markdownWithMeta)
